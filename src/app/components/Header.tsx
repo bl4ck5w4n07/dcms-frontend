@@ -17,7 +17,7 @@ export function Header({ onOpenSignIn, onOpenSignUp }: HeaderProps) {
       <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
         <a href="/" className="inline-flex items-center gap-2">
           <span className="inline-block size-6 rounded-sm bg-primary"></span>
-          <span>NextCare</span>
+          <span>Go-Goyagoy</span>
         </a>
         <nav className="hidden items-center gap-2 sm:flex">
           {!user ? (

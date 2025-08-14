@@ -42,7 +42,7 @@ export function BookAppointmentForm() {
   const onSubmit = async (values: AppointmentFormValues) => {
     try {
       setPending(true);
-      const res = await fetch("/api/appointments", { method: "POST", body: JSON.stringify(values) });
+      const res = await fetch("/api/appointments/book", { method: "POST", body: JSON.stringify(values) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to book");
       toast.success(`Appointment requested for ${values.firstName} ${values.lastName}`);
