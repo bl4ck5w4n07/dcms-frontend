@@ -1,0 +1,81 @@
+Yes! That’s a solid approach — it essentially **verifies ownership of the anonymous patient’s contact info before merging**. Here’s a breakdown of how it could work in a DDD-friendly, secure way:
+
+---
+
+### **Flow: Anonymous → Verified Account**
+
+1. **Anonymous Booking**
+
+   * Patient books with phone/email.
+   * A minimal **AnonymousPatient** record is created:
+
+     ```ts
+     {
+       id: "anon-uuid",
+       firstName: "...",
+       lastName: "...",
+       contact: { method: "email", value: "anon@example.com" },
+       createdAt: "...",
+     }
+     ```
+   * All appointments link to this `AnonymousPatient.id`.
+
+2. **Patient Decides to Register/Login**
+
+   * Patient enters the same email/phone.
+   * System checks: is there an **AnonymousPatient** record with this contact info?
+
+3. **OTP Verification**
+
+   * Generate a one-time OTP (e.g., 6-digit numeric or 8-char alphanumeric).
+   * Send OTP to the email or phone provided.
+   * Patient inputs OTP on the UI.
+   * System verifies OTP matches and hasn’t expired.
+
+4. **Account Creation / Temporary Password**
+
+   * On successful OTP verification:
+
+     * Create a **full Patient account** (User entity).
+     * Optionally, generate a **temporary password** and send via email/SMS, or prompt the patient to set a password immediately.
+   * **Merge Appointments**:
+
+     ```ts
+     UPDATE appointments
+     SET patientId = newPatient.id
+     WHERE patientId = anonymousPatient.id
+     ```
+   * Delete or mark the **AnonymousPatient** record as merged.
+
+5. **Patient Access**
+
+   * Patient can now log in normally and see all previous appointments.
+
+---
+
+### **Pros**
+
+* Ensures patient owns the contact info before claiming appointments.
+* No anonymous data gets linked incorrectly.
+* Works with email or mobile OTP (flexible for your region).
+* Preserves all appointments made while anonymous.
+
+---
+
+### **Implementation Notes**
+
+* OTP should **expire quickly** (e.g., 5–10 minutes) and be **single-use**.
+* Store OTP **hashed** in DB (never plaintext).
+* Temporary password can be optional if you allow the patient to **set their password during registration** after OTP verification.
+
+---
+
+If you want, I can sketch the **Next.js + Supabase API flow** for this, showing:
+
+* OTP generation & verification
+* Anonymous → Patient merge
+* Updating appointments automatically
+
+This would be production-ready for your dashboard.
+
+Do you want me to do that?
