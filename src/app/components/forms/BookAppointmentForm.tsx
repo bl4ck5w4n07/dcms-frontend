@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,46 +10,83 @@ import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { toast } from "sonner";
-
-const contactSchema = z.discriminatedUnion("method", [
-  z.object({ method: z.literal("email"), value: z.string().email("Invalid email") }),
-  z.object({ method: z.literal("phone"), value: z.string().min(8, "Phone is too short").regex(/^[+0-9 ()-]+$/, "Only numbers and +()- ") })
-]);
+import { useAuth } from "../auth/auth-context";
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  contact: contactSchema
+  contactMethod: z.enum(["email", "phone"]),
+  contact: z.string().min(1, "Contact information is required")
 });
 
 export type AppointmentFormValues = z.infer<typeof formSchema>;
 
 export function BookAppointmentForm() {
   const [pending, setPending] = useState(false);
-  const [method, setMethod] = useState<"email" | "phone">("email");
-
-  const defaultValues: AppointmentFormValues = useMemo(() => ({
-    firstName: "",
-    lastName: "",
-    contact: { method: "email", value: "" }
-  }), []);
+  const { user } = useAuth();
 
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      contactMethod: "email",
+      contact: ""
+    }
   });
+
+  const contactMethod = form.watch("contactMethod");
 
   const onSubmit = async (values: AppointmentFormValues) => {
     try {
       setPending(true);
-      const res = await fetch("/api/appointments/book", { method: "POST", body: JSON.stringify(values) });
+      
+      // Validate contact based on method
+      if (values.contactMethod === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(values.contact)) {
+          toast.error("Please enter a valid email address");
+          return;
+        }
+      } else {
+        const phoneRegex = /^[+0-9 ()-]+$/;
+        if (!phoneRegex.test(values.contact) || values.contact.length < 8) {
+          toast.error("Please enter a valid phone number");
+          return;
+        }
+      }
+      
+      const appointmentData = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        contact: values.contact,
+        userId: user?.id || null
+      };
+
+      console.log('Booking appointment with data:', appointmentData);
+
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-15d1e443/api/appointments/book`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${publicAnonKey}`
+        },
+        body: JSON.stringify(appointmentData)
+      });
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to book");
-      toast.success(`Appointment requested for ${values.firstName} ${values.lastName}`);
-      form.reset(defaultValues);
-      setMethod("email");
-    } catch (e) {
-      toast.error("Something went wrong. Please try again.");
+      console.log('Booking response:', data);
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to book appointment");
+      }
+      
+      toast.success(`Appointment requested for ${values.firstName} ${values.lastName}. Staff will contact you to confirm details.`);
+      form.reset();
+    } catch (e: any) {
+      console.error("Appointment booking error:", e);
+      toast.error(e.message || "Something went wrong. Please try again.");
     } finally {
       setPending(false);
     }
@@ -59,35 +96,45 @@ export function BookAppointmentForm() {
     <Card id="book" className="border shadow-sm">
       <CardHeader>
         <CardTitle>Book an appointment</CardTitle>
+        <p className="text-muted-foreground">
+          Submit your details and our staff will contact you to confirm your appointment time and discuss your needs.
+        </p>
       </CardHeader>
       <CardContent>
         <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" placeholder="Jane" {...form.register("firstName")}/>
+              <Input 
+                id="firstName" 
+                placeholder="Jane" 
+                {...form.register("firstName")} 
+              />
               {form.formState.errors.firstName && (
-                <p className="text-destructive">{form.formState.errors.firstName.message}</p>
+                <p className="text-destructive text-sm">{form.formState.errors.firstName.message}</p>
               )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" placeholder="Doe" {...form.register("lastName")}/>
+              <Input 
+                id="lastName" 
+                placeholder="Doe" 
+                {...form.register("lastName")} 
+              />
               {form.formState.errors.lastName && (
-                <p className="text-destructive">{form.formState.errors.lastName.message}</p>
+                <p className="text-destructive text-sm">{form.formState.errors.lastName.message}</p>
               )}
             </div>
           </div>
 
           <div className="grid gap-3">
-            <Label>Preferred contact</Label>
+            <Label>Preferred contact method</Label>
             <RadioGroup
               className="grid grid-cols-2 gap-2 sm:max-w-xs"
-              value={method}
+              value={contactMethod}
               onValueChange={(val) => {
-                const m = val as "email" | "phone";
-                setMethod(m);
-                form.setValue("contact", { method: m, value: "" }, { shouldValidate: true });
+                form.setValue("contactMethod", val as "email" | "phone");
+                form.setValue("contact", ""); // Clear contact when method changes
               }}
             >
               <div className="flex items-center gap-2 rounded-md border p-2">
@@ -96,28 +143,33 @@ export function BookAppointmentForm() {
               </div>
               <div className="flex items-center gap-2 rounded-md border p-2">
                 <RadioGroupItem id="phone" value="phone" />
-                <Label htmlFor="phone" className="cursor-pointer">Mobile</Label>
+                <Label htmlFor="phone" className="cursor-pointer">Phone</Label>
               </div>
             </RadioGroup>
 
             <div className="grid gap-2 sm:max-w-md">
-              <Label htmlFor="contactValue">{method === "email" ? "Email address" : "Mobile number"}</Label>
+              <Label htmlFor="contact">
+                {contactMethod === "email" ? "Email address" : "Phone number"}
+              </Label>
               <Input
-                id="contactValue"
-                placeholder={method === "email" ? "jane@acme.com" : "+1 555 123 4567"}
-                type={method === "email" ? "email" : "tel"}
-                value={form.getValues("contact").method === method ? form.getValues("contact").value : ""}
-                onChange={(e) => form.setValue("contact", { method, value: e.target.value }, { shouldValidate: true })}
+                id="contact"
+                placeholder={contactMethod === "email" ? "jane@example.com" : "+1 555 123 4567"}
+                type={contactMethod === "email" ? "email" : "tel"}
+                {...form.register("contact")}
               />
               {form.formState.errors.contact && (
-                <p className="text-destructive">{(form.formState.errors.contact as any)?.value?.message || (form.formState.errors.contact as any)?.message}</p>
+                <p className="text-destructive text-sm">{form.formState.errors.contact.message}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={pending}>{pending ? "Submitting..." : "Request booking"}</Button>
-            <p className="text-muted-foreground">We’ll confirm via your selected contact method.</p>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Submitting..." : "Request appointment"}
+            </Button>
+            <p className="text-muted-foreground text-sm">
+              Our staff will contact you within 24 hours to confirm your appointment details.
+            </p>
           </div>
         </form>
       </CardContent>
