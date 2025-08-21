@@ -32,13 +32,19 @@ export default function ForgotPasswordPage() {
     const result = await forgotPassword(email);
     if (result.success) {
       setIsEmailSent(true);
-      toast.success('Reset Link Sent!', {
-        description: 'Check your email for password reset instructions.'
+      toast.success('Reset Link Generated!', {
+        description: 'A secure reset token has been created for your account. Check console for the reset link.'
       });
     } else {
-      toast.error('Error', {
-        description: result.error || 'Failed to send reset email. Please try again.'
-      });
+      if (result.error?.includes('No account exists')) {
+        toast.error('Email Not Found', {
+          description: result.error
+        });
+      } else {
+        toast.error('Unable to Send Reset Link', {
+          description: result.error || 'Failed to process password reset request. Please try again.'
+        });
+      }
     }
     setIsSubmitting(false);
   };
@@ -82,7 +88,7 @@ export default function ForgotPasswordPage() {
                   </p>
                 </div>
                 
-                <div className="pt-4">
+                <div className="pt-4 space-y-3">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -93,6 +99,16 @@ export default function ForgotPasswordPage() {
                   >
                     Try Different Email
                   </Button>
+                  
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 mb-2">
+                      <strong>Development Mode:</strong> In production, you would receive the reset link via email. 
+                      For testing, check the browser console for the generated reset link.
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      The backend has generated a secure token and stored it in the database with proper expiration.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -154,13 +170,16 @@ export default function ForgotPasswordPage() {
                 <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-blue-800">
-                    Demo Environment
+                    Supabase Backend Integration
                   </h3>
                   <div className="mt-2 text-sm text-blue-700">
-                    <p>
-                      In this demo, password reset emails are simulated. 
-                      In a production environment, this would send an actual email 
-                      with a secure reset link.
+                    <p className="mb-2">
+                      This connects to your Supabase backend to validate the email address and 
+                      generate a secure reset token. The backend handles password reset tokens 
+                      with proper expiration and validation.
+                    </p>
+                    <p className="text-xs font-medium">
+                      Check the browser console to see the reset link that would be sent via email.
                     </p>
                   </div>
                 </div>
