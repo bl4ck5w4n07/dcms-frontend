@@ -1,0 +1,16 @@
+Patient
+    - UserEditPassword	Edit Password
+    - UserSavePassword	Save Password
+
+    - UserEditBasicInfo Edit First Name and/or Last Name
+    - UserSaveChangesBasicInfo Saved changes on First Name and/or Last Name
+    - UserCancelChangesBasicInfo Cancel changes on First Name and/or Last Name
+
+    - UserEditContactInfo Edit Email and/or Phone number
+    - UserSaveChangesContactInfo Saved changes on Email and/or Phone number
+    - UserCancelChangesContactInfo Cancel changes on Email and/or Phone number
+
+Caching
+    - roles and permission
+    - update cache if changes are made to:
+        - roles and permission
