@@ -25,7 +25,8 @@ export default function LoginPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    username: ''
+    name: '',
+    phone: ''
   });
 
   const [showPassword, setShowPassword] = useState({
@@ -62,6 +63,9 @@ export default function LoginPage() {
       }
       if (!/(?=.*\d)/.test(signUpData.password)) {
         errors.push('Password must contain at least one number');
+      }
+      if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(signUpData.password)) {
+        errors.push('Password must contain at least one special character');
       }
       if (signUpData.confirmPassword && signUpData.password !== signUpData.confirmPassword) {
         errors.push('Passwords do not match');
@@ -105,7 +109,7 @@ export default function LoginPage() {
       return;
     }
     
-    const result = await signUp(signUpData.email, signUpData.password, signUpData.username);
+    const result = await signUp(signUpData.email, signUpData.password, signUpData.name, signUpData.phone);
     if (result.success) {
       toast.success('Account Created!', {
         description: 'Welcome to SmileCare Dental. You are now signed in.'
@@ -129,7 +133,7 @@ export default function LoginPage() {
   const isSignUpFormValid = signUpData.email && 
                            signUpData.password && 
                            signUpData.confirmPassword && 
-                           signUpData.username && 
+                           signUpData.name && 
                            passwordErrors.length === 0;
 
   return (
@@ -245,14 +249,14 @@ export default function LoginPage() {
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-username">User Name</Label>
+                    <Label htmlFor="signup-name">Full Name</Label>
                     <Input
-                      id="signup-username"
+                      id="signup-name"
                       type="text"
-                      value={signUpData.username}
-                      onChange={(e) => setSignUpData(prev => ({ ...prev, username: e.target.value }))}
+                      value={signUpData.name}
+                      onChange={(e) => setSignUpData(prev => ({ ...prev, name: e.target.value }))}
                       required
-                      placeholder="Enter your user name"
+                      placeholder="Enter your full name"
                     />
                   </div>
 
@@ -265,6 +269,17 @@ export default function LoginPage() {
                       onChange={(e) => setSignUpData(prev => ({ ...prev, email: e.target.value }))}
                       required
                       placeholder="Enter your email"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      value={signUpData.phone}
+                      onChange={(e) => setSignUpData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Enter your phone number"
                     />
                   </div>
 
@@ -331,7 +346,8 @@ export default function LoginPage() {
                           { check: /(?=.*[a-z])/.test(signUpData.password), text: 'Contains lowercase letter' },
                           { check: /(?=.*[A-Z])/.test(signUpData.password), text: 'Contains uppercase letter' },
                           { check: /(?=.*\d)/.test(signUpData.password), text: 'Contains number' },
-                          { check: signUpData.confirmPassword ? signUpData.password === signUpData.confirmPassword : true, text: 'Passwords match' }
+                          { check: /(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(signUpData.password), text: 'Contains special character' },
+                          { check: signUpData.confirmPassword && signUpData.password ? signUpData.password === signUpData.confirmPassword : false, text: 'Passwords match' }
                         ].map((requirement, index) => (
                           <div key={index} className="flex items-center space-x-2 text-xs">
                             <CheckCircle className={`h-3 w-3 ${requirement.check ? 'text-green-500' : 'text-gray-300'}`} />
