@@ -314,8 +314,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      // TODO: Implement actual forgot password logic with Supabase
-      // For now, simulate the request
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/forgot-password`, {
         method: 'POST',
         headers: {
@@ -325,18 +323,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email })
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      console.log("Raw response:", text);
+
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Response was not JSON: " + text);
+      }
+
+      //const data = await response.json();
 
       if (!response.ok) {
-        const errorMsg = data.error || 'Failed to send reset email';
+        let errorMsg = data.error || 'Failed to send reset email. Please try again.';
+        
+        // Handle specific error cases
+        if (response.status === 404 || data.error?.includes('No account exists')) {
+          errorMsg = `No account exists with the email address "${email}". Please check your email or create a new account.`;
+        } else if (response.status >= 500) {
+          errorMsg = 'Server error. Please try again in a few moments.';
+        }
+        
         setError(errorMsg);
         return { success: false, error: errorMsg };
       }
 
+      // For demo purposes, also show the console message
+      if (data.resetLink) {
+        console.log('=== SUPABASE EMAIL SERVICE ===');
+        console.log(`To: ${email}`);
+        console.log(`Subject: Reset Your SmileCare Dental Password`);
+        console.log(`Reset Link: ${data.resetLink}`);
+        console.log('===============================');
+      }
+
       return { success: true };
     } catch (error) {
-      // In demo mode, always return success
-      return { success: true };
+      console.error('Network error during forgot password:', error);
+      const errorMsg = 'Network connection error. Please check your internet connection and try again.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setIsLoading(false);
     }
@@ -347,8 +374,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      // TODO: Implement actual reset password logic with Supabase
-      // For now, simulate the request
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/reset-password`, {
         method: 'POST',
         headers: {
@@ -361,15 +386,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMsg = data.error || 'Failed to reset password';
+        let errorMsg = data.error || 'Failed to reset password. Please try again.';
+        
+        // Handle specific error cases
+        if (response.status === 400) {
+          if (data.error?.includes('Invalid token') || data.error?.includes('expired')) {
+            errorMsg = 'Invalid or expired reset token. Please request a new password reset link.';
+          } else if (data.error?.includes('Token does not match')) {
+            errorMsg = 'This reset link is not valid for this email address.';
+          }
+        } else if (response.status === 404) {
+          errorMsg = 'Reset token not found. Please request a new password reset link.';
+        } else if (response.status >= 500) {
+          errorMsg = 'Server error. Please try again in a few moments.';
+        }
+        
         setError(errorMsg);
         return { success: false, error: errorMsg };
       }
 
+      // Log successful password reset for demo purposes
+      console.log('=== SUPABASE PASSWORD RESET ===');
+      console.log(`Email: ${email}`);
+      console.log(`Password successfully updated in Supabase database`);
+      console.log(`Reset token invalidated`);
+      console.log('===============================');
+
       return { success: true };
     } catch (error) {
-      // In demo mode, always return success
-      return { success: true };
+      console.error('Network error during password reset:', error);
+      const errorMsg = 'Network connection error. Please check your internet connection and try again.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setIsLoading(false);
     }
