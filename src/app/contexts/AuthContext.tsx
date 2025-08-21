@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('Attempting sign in for:', email);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/signin`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/signin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/signup`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return { success: false, error: 'No user logged in' };
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/profile/${user.email}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/profile/${user.email}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/verify-otp`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resendOTP = async (email: string, type: 'signin' | 'signup'): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/resend-otp`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/resend-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -278,7 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/change-password`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -314,7 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/forgot-password`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -323,23 +323,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email })
       });
 
-      const text = await response.text();
-      console.log("Raw response:", text);
-
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error("Response was not JSON: " + text);
-      }
-
-      //const data = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         let errorMsg = data.error || 'Failed to send reset email. Please try again.';
         
         // Handle specific error cases
-        if (response.status === 404 || data.error?.includes('No account exists')) {
+        if (response.status === 404) {
           errorMsg = `No account exists with the email address "${email}". Please check your email or create a new account.`;
         } else if (response.status >= 500) {
           errorMsg = 'Server error. Please try again in a few moments.';
@@ -374,7 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/auth/reset-password`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

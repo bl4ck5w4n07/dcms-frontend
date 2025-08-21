@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/app/contexts/AuthContext';
+import { Toaster } from '@/app/components/ui/sonner';
 import '@/app/components/ui/globals.css';
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           {children}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

@@ -111,7 +111,7 @@ async function initializeDemoData() {
 initializeDemoData();
 
 // Health check endpoint
-app.get('/make-server-455ee360/health', async (c) => {
+app.get('/make-server-c89a26e4/health', async (c) => {
   const allUsers = await kv.getByPrefix('dcms:user:');
   return c.json({ 
     status: 'ok', 
@@ -122,7 +122,7 @@ app.get('/make-server-455ee360/health', async (c) => {
 });
 
 // Auth endpoints
-app.post('/make-server-455ee360/auth/signin', async (c) => {
+app.post('/make-server-c89a26e4/auth/signin', async (c) => {
   try {
     const { email, password } = await c.req.json();
     
@@ -158,7 +158,7 @@ app.post('/make-server-455ee360/auth/signin', async (c) => {
   }
 });
 
-app.post('/make-server-455ee360/auth/signup', async (c) => {
+app.post('/make-server-c89a26e4/auth/signup', async (c) => {
   try {
     const { email, password, name, phone, role = 'patient' } = await c.req.json();
     
@@ -195,7 +195,7 @@ app.post('/make-server-455ee360/auth/signup', async (c) => {
 });
 
 // Appointment endpoints
-app.post('/make-server-455ee360/appointments', async (c) => {
+app.post('/make-server-c89a26e4/appointments', async (c) => {
   try {
     const appointmentData = await c.req.json();
     const appointmentId = crypto.randomUUID();
@@ -224,7 +224,7 @@ app.post('/make-server-455ee360/appointments', async (c) => {
   }
 });
 
-app.get('/make-server-455ee360/appointments', async (c) => {
+app.get('/make-server-c89a26e4/appointments', async (c) => {
   try {
     const userEmail = c.req.query('userEmail');
     const role = c.req.query('role');
@@ -251,7 +251,7 @@ app.get('/make-server-455ee360/appointments', async (c) => {
   }
 });
 
-app.put('/make-server-455ee360/appointments/:id', async (c) => {
+app.put('/make-server-c89a26e4/appointments/:id', async (c) => {
   try {
     const appointmentId = c.req.param('id');
     const updates = await c.req.json();
@@ -276,7 +276,7 @@ app.put('/make-server-455ee360/appointments/:id', async (c) => {
 });
 
 // Notes endpoints
-app.post('/make-server-455ee360/appointments/:id/notes', async (c) => {
+app.post('/make-server-c89a26e4/appointments/:id/notes', async (c) => {
   try {
     const appointmentId = c.req.param('id');
     const { content, authorEmail, authorRole } = await c.req.json();
@@ -305,7 +305,7 @@ app.post('/make-server-455ee360/appointments/:id/notes', async (c) => {
   }
 });
 
-app.get('/make-server-455ee360/appointments/:id/notes', async (c) => {
+app.get('/make-server-c89a26e4/appointments/:id/notes', async (c) => {
   try {
     const appointmentId = c.req.param('id');
     const noteIds = await kv.get(`dcms:appointment-notes:${appointmentId}`) || [];
@@ -324,7 +324,7 @@ app.get('/make-server-455ee360/appointments/:id/notes', async (c) => {
 });
 
 // Walk-in patient endpoint (staff only)
-app.post('/make-server-455ee360/walk-in-patient', async (c) => {
+app.post('/make-server-c89a26e4/walk-in-patient', async (c) => {
   try {
     const { name, phone, email, staffEmail } = await c.req.json();
     
@@ -351,7 +351,7 @@ app.post('/make-server-455ee360/walk-in-patient', async (c) => {
 });
 
 // Profile update endpoint
-app.put('/make-server-455ee360/profile/:email', async (c) => {
+app.put('/make-server-c89a26e4/profile/:email', async (c) => {
   try {
     const email = c.req.param('email');
     const updates = await c.req.json();
@@ -379,7 +379,7 @@ app.put('/make-server-455ee360/profile/:email', async (c) => {
 });
 
 // Admin endpoints - create staff/dentist users
-app.post('/make-server-455ee360/admin/users', async (c) => {
+app.post('/make-server-c89a26e4/admin/users', async (c) => {
   try {
     const { email, password, name, role, createdByAdmin } = await c.req.json();
     
@@ -416,7 +416,7 @@ app.post('/make-server-455ee360/admin/users', async (c) => {
 });
 
 // Get all staff and dentists (admin only)
-app.get('/make-server-455ee360/admin/users', async (c) => {
+app.get('/make-server-c89a26e4/admin/users', async (c) => {
   try {
     const allUsers = await kv.getByPrefix('dcms:user:');
     const staffAndDentists = allUsers.filter(user => 
@@ -434,7 +434,7 @@ app.get('/make-server-455ee360/admin/users', async (c) => {
 });
 
 // Change password endpoint (for logged-in users)
-app.post('/make-server-455ee360/auth/change-password', async (c) => {
+app.post('/make-server-c89a26e4/auth/change-password', async (c) => {
   try {
     const { email, currentPassword, newPassword } = await c.req.json();
     
@@ -471,7 +471,7 @@ app.post('/make-server-455ee360/auth/change-password', async (c) => {
 });
 
 // Forgot password endpoint
-app.post('/make-server-455ee360/auth/forgot-password', async (c) => {
+app.post('/make-server-c89a26e4/auth/forgot-password', async (c) => {
   try {
     const { email } = await c.req.json();
     
@@ -518,7 +518,7 @@ app.post('/make-server-455ee360/auth/forgot-password', async (c) => {
 });
 
 // Reset password endpoint
-app.post('/make-server-455ee360/auth/reset-password', async (c) => {
+app.post('/make-server-c89a26e4/auth/reset-password', async (c) => {
   try {
     const { token, email, newPassword } = await c.req.json();
     
@@ -537,7 +537,7 @@ app.post('/make-server-455ee360/auth/reset-password', async (c) => {
     if (Date.now() > resetData.expires) {
       console.log(`Expired reset token attempted: ${token}`);
       // Clean up expired token
-      await kv.delete(`dcms:reset-token:${token}`);
+      await kv.del(`dcms:reset-token:${token}`);
       return c.json({ error: 'Reset token has expired' }, 400);
     }
 
@@ -565,7 +565,7 @@ app.post('/make-server-455ee360/auth/reset-password', async (c) => {
     await kv.set(`dcms:user:${email}`, updatedUser);
     
     // Delete the reset token to prevent reuse
-    await kv.delete(`dcms:reset-token:${token}`);
+    await kv.del(`dcms:reset-token:${token}`);
     
     console.log(`Password successfully reset for user: ${email}`);
     return c.json({ success: true });
