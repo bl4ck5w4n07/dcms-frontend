@@ -25,8 +25,7 @@ export default function LoginPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    name: '',
-    phone: ''
+    name: ''
   });
 
   const [showPassword, setShowPassword] = useState({
@@ -109,7 +108,7 @@ export default function LoginPage() {
       return;
     }
     
-    const result = await signUp(signUpData.email, signUpData.password, signUpData.name, signUpData.phone);
+    const result = await signUp(signUpData.email, signUpData.password, signUpData.name);
     if (result.success) {
       toast.success('Account Created!', {
         description: 'Welcome to SmileCare Dental. You are now signed in.'
@@ -249,14 +248,14 @@ export default function LoginPage() {
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name">User Name</Label>
                     <Input
                       id="signup-name"
                       type="text"
                       value={signUpData.name}
                       onChange={(e) => setSignUpData(prev => ({ ...prev, name: e.target.value }))}
                       required
-                      placeholder="Enter your full name"
+                      placeholder="Enter your user name"
                     />
                   </div>
 
@@ -272,16 +271,7 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number</Label>
-                    <Input
-                      id="signup-phone"
-                      type="tel"
-                      value={signUpData.phone}
-                      onChange={(e) => setSignUpData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
+
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>

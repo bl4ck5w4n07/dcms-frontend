@@ -30,13 +30,16 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true);
     
     const result = await forgotPassword(email);
+    console.log(result);
     if (result.success) {
       setIsEmailSent(true);
       toast.success('Reset Link Generated!', {
         description: 'A secure reset token has been created for your account. Check console for the reset link.'
       });
     } else {
+      console.log(`success false`);
       if (result.error?.includes('No account exists')) {
+        console.log(`Email not found`);
         toast.error('Email Not Found', {
           description: result.error
         });
