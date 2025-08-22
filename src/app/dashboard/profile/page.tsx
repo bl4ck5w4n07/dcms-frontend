@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -8,20 +8,53 @@ import { Label } from '@/app/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Badge } from '@/app/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
-import { User, Mail, Phone, Shield, Calendar, CheckCircle, AlertCircle, Eye, EyeOff, Lock } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { User, Mail, Phone, Shield, Calendar, CheckCircle, AlertCircle, Eye, EyeOff, Lock, MapPin, Cake } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Address } from '@/app/types/index';
 
 export default function ProfilePage() {
   const { user, updateProfile, changePassword } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingBasic, setIsEditingBasic] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
   const [isSaving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+
+  // Update state when user data changes
+  useEffect(() => {
+    if (user) {
+      setBasicInfoData({
+        firstName: user?.name?.split(' ')[0] || '',
+        lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+        birthdate: user?.birthdate || '',
+        street: user?.address?.street || '',
+        city: user?.address?.city || '',
+        state: user?.address?.state || '',
+        zipCode: user?.address?.zipCode || '',
+        country: user?.address?.country || '',
+      });
+      setContactInfoData({
+        email: user?.email || '',
+        phone: user?.phone || '',
+      });
+    }
+  }, [user]);
   
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
+  const [basicInfoData, setBasicInfoData] = useState({
+    firstName: user?.name?.split(' ')[0] || '',
+    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    birthdate: user?.birthdate || '',
+    street: user?.address?.street || '',
+    city: user?.address?.city || '',
+    state: user?.address?.state || '',
+    zipCode: user?.address?.zipCode || '',
+    country: user?.address?.country || '',
+  });
+
+  const [contactInfoData, setContactInfoData] = useState({
+    email: user?.email || '',
     phone: user?.phone || '',
   });
 
@@ -38,21 +71,31 @@ export default function ProfilePage() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const handleSave = async () => {
+  const handleSaveBasicInfo = async () => {
     setSaving(true);
     setMessage(null);
 
     try {
+      const fullName = `${basicInfoData.firstName} ${basicInfoData.lastName}`.trim();
+      const address = {
+        street: basicInfoData.street,
+        city: basicInfoData.city,
+        state: basicInfoData.state,
+        zipCode: basicInfoData.zipCode,
+        country: basicInfoData.country
+      };
+
       const result = await updateProfile({
-        name: formData.name,
-        phone: formData.phone
+        name: fullName,
+        birthdate: basicInfoData.birthdate,
+        address: address
       });
 
       if (result.success) {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        setIsEditing(false);
+        setMessage({ type: 'success', text: 'Basic information updated successfully!' });
+        setIsEditingBasic(false);
       } else {
-        setMessage({ type: 'error', text: result.error || 'Failed to update profile' });
+        setMessage({ type: 'error', text: result.error || 'Failed to update basic information' });
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
@@ -61,12 +104,49 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCancel = () => {
-    setFormData({
-      name: user?.name || '',
+  const handleSaveContactInfo = async () => {
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      const result = await updateProfile({
+        phone: contactInfoData.phone
+      });
+
+      if (result.success) {
+        setMessage({ type: 'success', text: 'Contact information updated successfully!' });
+        setIsEditingContact(false);
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to update contact information' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelBasicInfo = () => {
+    setBasicInfoData({
+      firstName: user?.name?.split(' ')[0] || '',
+      lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+      birthdate: user?.birthdate || '',
+      street: user?.address?.street || '',
+      city: user?.address?.city || '',
+      state: user?.address?.state || '',
+      zipCode: user?.address?.zipCode || '',
+      country: user?.address?.country || '',
+    });
+    setIsEditingBasic(false);
+    setMessage(null);
+  };
+
+  const handleCancelContactInfo = () => {
+    setContactInfoData({
+      email: user?.email || '',
       phone: user?.phone || '',
     });
-    setIsEditing(false);
+    setIsEditingContact(false);
     setMessage(null);
   };
 
@@ -186,34 +266,127 @@ export default function ProfilePage() {
       )}
 
       <div className="space-y-6">
-        {/* Account Information */}
+        {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Account Information
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Basic Information
+              </CardTitle>
+              {!isEditingBasic && (
+                <Button variant="outline" onClick={() => setIsEditingBasic(true)}>
+                  Edit Basic Info
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
-                <p className="text-xs text-gray-500">Email cannot be changed</p>
+                <Label htmlFor="firstName">First Name</Label>
+                {isEditingBasic ? (
+                  <Input
+                    id="firstName"
+                    value={basicInfoData.firstName}
+                    onChange={(e) => setBasicInfoData(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="Enter your first name"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{user?.name?.split(' ')[0] || 'Not provided'}</span>
+                  </div>
+                )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-gray-500" />
-                  <Badge className={roleDisplay.color}>
-                    {roleDisplay.label}
-                  </Badge>
-                </div>
+                <Label htmlFor="lastName">Last Name</Label>
+                {isEditingBasic ? (
+                  <Input
+                    id="lastName"
+                    value={basicInfoData.lastName}
+                    onChange={(e) => setBasicInfoData(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Enter your last name"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{user?.name?.split(' ').slice(1).join(' ') || 'Not provided'}</span>
+                  </div>
+                )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="birthdate">Date of Birth</Label>
+              {isEditingBasic ? (
+                <Input
+                  id="birthdate"
+                  type="date"
+                  value={basicInfoData.birthdate}
+                  onChange={(e) => setBasicInfoData(prev => ({ ...prev, birthdate: e.target.value }))}
+                />
+              ) : (
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                  <Cake className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    {user?.birthdate ? format(new Date(user.birthdate), 'MMMM dd, yyyy') : 'Not provided'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Address</Label>
+              {isEditingBasic ? (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Street Address"
+                    value={basicInfoData.street}
+                    onChange={(e) => setBasicInfoData(prev => ({ ...prev, street: e.target.value }))}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <Input
+                      placeholder="City"
+                      value={basicInfoData.city}
+                      onChange={(e) => setBasicInfoData(prev => ({ ...prev, city: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="State"
+                      value={basicInfoData.state}
+                      onChange={(e) => setBasicInfoData(prev => ({ ...prev, state: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="ZIP Code"
+                      value={basicInfoData.zipCode}
+                      onChange={(e) => setBasicInfoData(prev => ({ ...prev, zipCode: e.target.value }))}
+                    />
+                  </div>
+                  <Input
+                    placeholder="Country"
+                    value={basicInfoData.country}
+                    onChange={(e) => setBasicInfoData(prev => ({ ...prev, country: e.target.value }))}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 p-2 bg-gray-50 rounded border">
+                  <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                  <div className="text-sm">
+                    {user?.address ? (
+                      <div>
+                        {user.address.street && <div>{user.address.street}</div>}
+                        <div>
+                          {[user.address.city, user.address.state, user.address.zipCode].filter(Boolean).join(', ')}
+                        </div>
+                        {user.address.country && <div>{user.address.country}</div>}
+                      </div>
+                    ) : (
+                      'Not provided'
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {user.createdAt && (
@@ -236,47 +409,53 @@ export default function ProfilePage() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {isEditingBasic && (
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSaveBasicInfo} disabled={isSaving} className="flex-1">
+                  {isSaving ? 'Saving...' : 'Save Basic Info'}
+                </Button>
+                <Button variant="outline" onClick={handleCancelBasicInfo} className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Personal Information */}
+        {/* Contact Information */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Personal Information</CardTitle>
-              {!isEditing && (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Edit Profile
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+              {!isEditingContact && (
+                <Button variant="outline" onClick={() => setIsEditingContact(true)}>
+                  Edit Contact Info
                 </Button>
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              {isEditing ? (
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter your full name"
-                />
-              ) : (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{user.name}</span>
-                </div>
-              )}
+              <Label htmlFor="email">Email Address</Label>
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                <Mail className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">{user.email}</span>
+              </div>
+              <p className="text-xs text-gray-500">Email cannot be changed</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              {isEditing ? (
+              {isEditingContact ? (
                 <Input
                   id="phone"
                   type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  value={contactInfoData.phone}
+                  onChange={(e) => setContactInfoData(prev => ({ ...prev, phone: e.target.value }))}
                   placeholder="Enter your phone number"
                 />
               ) : (
@@ -287,12 +466,22 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {isEditing && (
+            <div className="space-y-2">
+              <Label htmlFor="role">Account Role</Label>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-gray-500" />
+                <Badge className={roleDisplay.color}>
+                  {roleDisplay.label}
+                </Badge>
+              </div>
+            </div>
+
+            {isEditingContact && (
               <div className="flex gap-2 pt-4">
-                <Button onClick={handleSave} disabled={isSaving} className="flex-1">
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                <Button onClick={handleSaveContactInfo} disabled={isSaving} className="flex-1">
+                  {isSaving ? 'Saving...' : 'Save Contact Info'}
                 </Button>
-                <Button variant="outline" onClick={handleCancel} className="flex-1">
+                <Button variant="outline" onClick={handleCancelContactInfo} className="flex-1">
                   Cancel
                 </Button>
               </div>
@@ -327,6 +516,9 @@ export default function ProfilePage() {
                         <Lock className="h-5 w-5" />
                         Change Password
                       </DialogTitle>
+                      <DialogDescription>
+                        Enter your current password and choose a new secure password for your account.
+                      </DialogDescription>
                     </DialogHeader>
                     
                     <form onSubmit={handlePasswordChange} className="space-y-4">

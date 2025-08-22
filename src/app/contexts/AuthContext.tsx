@@ -2,16 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { projectId, publicAnonKey } from '@/mock/supabase/info';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  phone?: string;
-  role: 'patient' | 'staff' | 'dentist' | 'admin';
-  canLogin: boolean;
-  isWalkIn?: boolean;
-}
+import { User, Address } from '../types/index';
 
 interface AuthContextType {
   user: User | null;
@@ -187,6 +178,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return { success: false, error: 'No user logged in' };
 
     try {
+      // Merge the updates with current user data, especially for nested objects like address
+      const updatedUser = { ...user };
+      
+      Object.keys(updates).forEach(key => {
+        if (key === 'address' && updates.address && user.address) {
+          // Merge address fields
+          updatedUser.address = { ...user.address, ...updates.address };
+        } else {
+          (updatedUser as any)[key] = (updates as any)[key];
+        }
+      });
+
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/profile/${user.email}`, {
         method: 'PUT',
         headers: {
@@ -199,13 +202,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        return { success: false, error: data.error };
+        return { success: false, error: data.error || 'Failed to update profile' };
       }
 
-      setUser(data.user);
-      localStorage.setItem('dcms_user', JSON.stringify(data.user));
+      // Use the updated user from the response, or fall back to our merged version
+      const finalUser = data.user || updatedUser;
+      setUser(finalUser);
+      localStorage.setItem('dcms_user', JSON.stringify(finalUser));
       return { success: true };
     } catch (error) {
+      console.error('Profile update error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
