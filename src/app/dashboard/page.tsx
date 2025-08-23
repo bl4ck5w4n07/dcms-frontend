@@ -57,7 +57,7 @@ export default function DashboardPage() {
       if (user?.email) params.append('userEmail', user.email);
       if (user?.role) params.append('role', user.role);
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/appointments?${params}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments?${params}`, {
         headers: {
           'Authorization': `Bearer ${publicAnonKey}`
         }

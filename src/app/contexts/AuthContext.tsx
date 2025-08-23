@@ -354,7 +354,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('===============================');
       }
 
-      return { success: true };
+      return { success: true};
     } catch (error) {
       console.error('Network error during forgot password:', error);
       const errorMsg = 'Network connection error. Please check your internet connection and try again.';

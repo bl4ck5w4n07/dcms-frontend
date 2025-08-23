@@ -2,7 +2,9 @@ import { Hono } from 'npm:hono';
 import { cors } from 'npm:hono/cors';
 import { logger } from 'npm:hono/logger';
 import * as kv from './kv_store.tsx';
+
 const app = new Hono();
+
 // Enable CORS for all routes
 app.use('*', cors({
   origin: '*',
@@ -13,8 +15,10 @@ app.use('*', cors({
     '*'
   ]
 }));
+
 // Add logging
 app.use('*', logger(console.log));
+
 // Initialize demo data
 async function initializeDemoData() {
   try {
@@ -101,20 +105,23 @@ async function initializeDemoData() {
     console.error('Error initializing demo data:', error);
   }
 }
+
 // Initialize demo data on startup (don't let failures crash the function)
 initializeDemoData().catch((error)=>{
   console.error('Failed to initialize demo data - function will continue:', error);
 });
+
 // Simple test endpoint (no database calls)
-app.get('/make-server-c89a26e4/test', (c)=>{
+app.get('/make-server-455ee360/test', (c)=>{
   return c.json({
     status: 'working',
     timestamp: new Date().toISOString(),
     message: 'Function deployed successfully'
   });
 });
+
 // Health check endpoint
-app.get('/make-server-c89a26e4/health', async (c)=>{
+app.get('/make-server-455ee360/health', async (c)=>{
   try {
     console.log('=== Health Check Started ===');
     const url = Deno.env.get("SUPABASE_URL");
@@ -154,8 +161,9 @@ app.get('/make-server-c89a26e4/health', async (c)=>{
     }, 500);
   }
 });
+
 // Auth endpoints
-app.post('/make-server-c89a26e4/auth/signin', async (c)=>{
+app.post('/make-server-455ee360/auth/signin', async (c)=>{
   try {
     const { email, password } = await c.req.json();
     console.log('Sign-in attempt for email:', email);
@@ -193,7 +201,8 @@ app.post('/make-server-c89a26e4/auth/signin', async (c)=>{
     }, 500);
   }
 });
-app.post('/make-server-c89a26e4/auth/signup', async (c)=>{
+
+app.post('/make-server-455ee360/auth/signup', async (c)=>{
   try {
     const { email, password, name, phone, role = 'patient' } = await c.req.json();
     if (!email || !password || !name) {
@@ -231,8 +240,9 @@ app.post('/make-server-c89a26e4/auth/signup', async (c)=>{
     }, 500);
   }
 });
+
 // Appointment endpoints
-app.post('/make-server-c89a26e4/appointments', async (c)=>{
+app.post('/make-server-455ee360/appointments', async (c)=>{
   try {
     const appointmentData = await c.req.json();
     const appointmentId = crypto.randomUUID();
@@ -260,7 +270,8 @@ app.post('/make-server-c89a26e4/appointments', async (c)=>{
     }, 500);
   }
 });
-app.get('/make-server-c89a26e4/appointments', async (c)=>{
+
+app.get('/make-server-455ee360/appointments', async (c)=>{
   try {
     const userEmail = c.req.query('userEmail');
     const role = c.req.query('role');
@@ -289,7 +300,8 @@ app.get('/make-server-c89a26e4/appointments', async (c)=>{
     }, 500);
   }
 });
-app.put('/make-server-c89a26e4/appointments/:id', async (c)=>{
+
+app.put('/make-server-455ee360/appointments/:id', async (c)=>{
   try {
     const appointmentId = c.req.param('id');
     const updates = await c.req.json();
@@ -315,8 +327,9 @@ app.put('/make-server-c89a26e4/appointments/:id', async (c)=>{
     }, 500);
   }
 });
+
 // Notes endpoints
-app.post('/make-server-c89a26e4/appointments/:id/notes', async (c)=>{
+app.post('/make-server-455ee360/appointments/:id/notes', async (c)=>{
   try {
     const appointmentId = c.req.param('id');
     const { content, authorEmail, authorRole } = await c.req.json();
@@ -344,7 +357,8 @@ app.post('/make-server-c89a26e4/appointments/:id/notes', async (c)=>{
     }, 500);
   }
 });
-app.get('/make-server-c89a26e4/appointments/:id/notes', async (c)=>{
+
+app.get('/make-server-455ee360/appointments/:id/notes', async (c)=>{
   try {
     const appointmentId = c.req.param('id');
     const noteIds = await kv.get(`dcms:appointment-notes:${appointmentId}`) || [];
@@ -363,8 +377,9 @@ app.get('/make-server-c89a26e4/appointments/:id/notes', async (c)=>{
     }, 500);
   }
 });
+
 // Walk-in patient endpoint (staff only)
-app.post('/make-server-c89a26e4/walk-in-patient', async (c)=>{
+app.post('/make-server-455ee360/walk-in-patient', async (c)=>{
   try {
     const { name, phone, email, staffEmail } = await c.req.json();
     // Create walk-in patient (can't login until they register)
@@ -391,8 +406,9 @@ app.post('/make-server-c89a26e4/walk-in-patient', async (c)=>{
     }, 500);
   }
 });
+
 // Profile update endpoint
-app.put('/make-server-c89a26e4/profile/:email', async (c)=>{
+app.put('/make-server-455ee360/profile/:email', async (c)=>{
   try {
     const email = c.req.param('email');
     const updates = await c.req.json();
@@ -420,8 +436,9 @@ app.put('/make-server-c89a26e4/profile/:email', async (c)=>{
     }, 500);
   }
 });
+
 // Admin endpoints - create staff/dentist users
-app.post('/make-server-c89a26e4/admin/users', async (c)=>{
+app.post('/make-server-455ee360/admin/users', async (c)=>{
   try {
     const { email, password, name, role, createdByAdmin } = await c.req.json();
     if (role !== 'staff' && role !== 'dentist') {
@@ -459,8 +476,9 @@ app.post('/make-server-c89a26e4/admin/users', async (c)=>{
     }, 500);
   }
 });
+
 // Get all staff and dentists (admin only)
-app.get('/make-server-c89a26e4/admin/users', async (c)=>{
+app.get('/make-server-455ee360/admin/users', async (c)=>{
   try {
     const allUsers = await kv.getByPrefix('dcms:user:');
     const staffAndDentists = allUsers.filter((user)=>user.role === 'staff' || user.role === 'dentist').map((user)=>{
@@ -477,8 +495,9 @@ app.get('/make-server-c89a26e4/admin/users', async (c)=>{
     }, 500);
   }
 });
+
 // Change password endpoint (for logged-in users)
-app.post('/make-server-c89a26e4/auth/change-password', async (c)=>{
+app.post('/make-server-455ee360/auth/change-password', async (c)=>{
   try {
     const { email, currentPassword, newPassword } = await c.req.json();
     if (!email || !currentPassword || !newPassword) {
@@ -517,8 +536,9 @@ app.post('/make-server-c89a26e4/auth/change-password', async (c)=>{
     }, 500);
   }
 });
+
 // Forgot password endpoint
-app.post('/make-server-c89a26e4/auth/forgot-password', async (c)=>{
+app.post('/make-server-455ee360/auth/forgot-password', async (c)=>{
   try {
     console.log('=== Forgot Password Request Started ===');
     const { email } = await c.req.json();
@@ -576,8 +596,9 @@ app.post('/make-server-c89a26e4/auth/forgot-password', async (c)=>{
     }, 500);
   }
 });
+
 // Reset password endpoint
-app.post('/make-server-c89a26e4/auth/reset-password', async (c)=>{
+app.post('/make-server-455ee360/auth/reset-password', async (c)=>{
   try {
     const { token, email, newPassword } = await c.req.json();
     if (!token || !email || !newPassword) {
@@ -638,4 +659,5 @@ app.post('/make-server-c89a26e4/auth/reset-password', async (c)=>{
     }, 500);
   }
 });
+
 Deno.serve(app.fetch);

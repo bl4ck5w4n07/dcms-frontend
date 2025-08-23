@@ -4,7 +4,7 @@ import { Toaster } from '@/app/components/ui/sonner';
 import '@/app/components/ui/globals.css';
 
 export const metadata: Metadata = {
-  title: 'SmileCare Dental - Modern Dental Clinic Management',
+  title: 'Go-Goyagoy - Modern Dental Clinic Management',
   description: 'Complete dental clinic management system for appointments, patient records, and more.',
 };
 
@@ -15,10 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
-          {children}
-          <Toaster />
+          <div className="min-h-screen bg-gray-50">
+            {children}
+            <Toaster />
+          </div>
         </AuthProvider>
       </body>
     </html>
