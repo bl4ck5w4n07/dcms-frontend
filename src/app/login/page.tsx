@@ -36,9 +36,13 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState('signin');
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
+  // Check if user should be allowed to access this page
   useEffect(() => {
     if (user && !isLoading) {
-      router.push('/dashboard');
+      // If user has email and canLogin = true, redirect them away (they shouldn't be here)
+      if (user.email && user.canLogin) {
+        router.push('/dashboard');
+      }
     }
   }, [user, isLoading, router]);
 
@@ -111,7 +115,7 @@ export default function LoginPage() {
     const result = await signUp(signUpData.email, signUpData.password, signUpData.name);
     if (result.success) {
       toast.success('Account Created!', {
-        description: 'Welcome to SmileCare Dental. You are now signed in.'
+        description: 'Welcome to Go-Goyagoy. You are now signed in.'
       });
       router.push('/dashboard');
     } else if (result.error) {
@@ -129,6 +133,22 @@ export default function LoginPage() {
     );
   }
 
+  // If user has email and canLogin = true, they shouldn't access this page
+  if (user && user.email && user.canLogin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <p className="text-gray-500 mb-4">You are already logged in.</p>
+            <Button onClick={() => router.push('/dashboard')}>
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const isSignUpFormValid = signUpData.email && 
                            signUpData.password && 
                            signUpData.confirmPassword && 
@@ -140,7 +160,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
-            Go-Goyagoy Dental
+            Go-Goyagoy
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to your account or create a new one

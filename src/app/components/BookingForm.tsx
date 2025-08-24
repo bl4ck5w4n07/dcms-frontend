@@ -37,6 +37,38 @@ function BookingFormContent({ userEmail, userName, userPhone, onSuccess, onDialo
     setSubmitMessage('');
 
     try {
+      // Check for existing pending appointments if user is logged in
+      if (userEmail) {
+        const checkApiUrl = `https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`;
+        const checkResponse = await fetch(checkApiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${publicAnonKey}`
+          }
+        });
+
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          const existingAppointments = checkData.appointments || [];
+          
+          // Check for pending appointments for this user
+          const pendingAppointments = existingAppointments.filter((apt: any) => 
+            apt.patientEmail === userEmail && apt.status === 'pending'
+          );
+
+          if (pendingAppointments.length > 0) {
+            const errorMsg = 'You already have a pending appointment. Please wait for confirmation before booking another appointment.';
+            setSubmitMessage(errorMsg);
+            toast.error('Booking Not Allowed', {
+              description: errorMsg
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+      // Proceed with booking
       const apiUrl = `https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`;
       const response = await fetch(apiUrl, {
         method: 'POST',

@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { 
   Calendar,
   Users,
@@ -13,17 +13,32 @@ import {
   Home,
   UserPlus,
   User,
-  Shield
+  Shield,
+  Lock
 } from 'lucide-react';
 
 interface NavigationProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
+  onChangePassword?: () => void;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActiveSection }) => {
+export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActiveSection, onChangePassword }) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
+
+  const handleChangePassword = () => {
+    if (onChangePassword) {
+      onChangePassword();
+    } else {
+      router.push('/change-password');
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   // Define menu items based on user role
   const getMenuItems = () => {
@@ -45,7 +60,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActive
         return [
           ...baseItems,
           { id: 'appointments', label: 'Appointments', icon: Calendar },
-          { id: 'patients', label: 'Patient Records', icon: Users },
+          { id: 'patients', label: 'Patients', icon: Users },
           { id: 'profile', label: 'My Profile', icon: User }
         ];
         
@@ -53,7 +68,8 @@ export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActive
         return [
           ...baseItems,
           { id: 'appointments', label: 'Appointments', icon: Calendar },
-          { id: 'patients', label: 'Patient Records', icon: Users },
+          { id: 'patients', label: 'Patients', icon: Users },
+          { id: 'walk-in-patient', label: 'Walk-in Patients', icon: UserPlus },
           { id: 'admin/users', label: 'User Management', icon: Shield },
           { id: 'profile', label: 'My Profile', icon: User }
         ];
@@ -62,6 +78,8 @@ export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActive
         return [
           ...baseItems,
           { id: 'appointments', label: 'Appointments', icon: Calendar },
+          { id: 'patients', label: 'Patients', icon: Users },
+          { id: 'walk-in-patient', label: 'Walk-in Patients', icon: UserPlus },
           { id: 'profile', label: 'My Profile', icon: User }
         ];
     }
@@ -100,14 +118,20 @@ export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActive
         </div>
       </nav>
       
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-2">
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={() => {
-            signOut();
-            router.push('/');
-          }}
+          onClick={handleChangePassword}
+        >
+          <Lock className="mr-3 h-4 w-4" />
+          Change Password
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={handleSignOut}
         >
           <LogOut className="mr-3 h-4 w-4" />
           Sign Out

@@ -349,12 +349,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.resetLink) {
         console.log('=== SUPABASE EMAIL SERVICE ===');
         console.log(`To: ${email}`);
-        console.log(`Subject: Reset Your SmileCare Dental Password`);
+        console.log(`Subject: Reset Your Go-Goyagoy Password`);
         console.log(`Reset Link: ${data.resetLink}`);
         console.log('===============================');
       }
 
-      return { success: true};
+      return { success: true };
     } catch (error) {
       console.error('Network error during forgot password:', error);
       const errorMsg = 'Network connection error. Please check your internet connection and try again.';
