@@ -2,26 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { usePatients } from '../../../contexts/PatientContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
+import { WalkInPatient } from '../../../components/WalkInPatient';
 import { User, Mail, Phone, Calendar, Search, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: string;
-  canLogin: boolean;
-  isWalkIn?: boolean;
-  createdAt: string;
-  createdBy?: string;
-}
+// Patient interface is now provided by PatientContext
 
 interface PatientAppointment {
   id: string;
@@ -32,24 +24,25 @@ interface PatientAppointment {
 
 export default function PatientsPage() {
   const { user } = useAuth();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const { 
+    patients, 
+    isLoading: patientsLoading, 
+    searchTerm, 
+    setSearchTerm, 
+    filteredPatients,
+    refreshPatients 
+  } = usePatients();
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
 
   const canViewPatients = user?.role === 'staff' || user?.role === 'dentist' || user?.role === 'admin';
+  const canAddWalkInPatients = user?.role === 'staff' || user?.role === 'admin';
 
-  const fetchPatients = async () => {
+  const fetchAppointments = async () => {
     if (!canViewPatients) return;
 
     try {
-      // Fetch all patients from KV store
-      const patientsResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/patients`, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`
-        }
-      });
-
+      setAppointmentsLoading(true);
       // Fetch appointments for additional context
       const appointmentResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`, {
         headers: {
@@ -57,32 +50,32 @@ export default function PatientsPage() {
         }
       });
 
-      if (patientsResponse.ok) {
-        const patientsData = await patientsResponse.json();
-        setPatients(patientsData.patients || []);
-      }
-
       if (appointmentResponse.ok) {
         const appointmentData = await appointmentResponse.json();
         setAppointments(appointmentData.appointments || []);
       }
     } catch (error) {
-      console.error('Error fetching patients:', error);
+      console.error('Error fetching appointments:', error);
     } finally {
-      setLoading(false);
+      setAppointmentsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPatients();
+    fetchAppointments();
   }, [canViewPatients]);
 
+  const handleWalkInPatientSuccess = () => {
+    refreshPatients();
+    fetchAppointments();
+  };
+
   const getPatientAppointmentCount = (patientEmail: string) => {
-    return appointments.filter(apt => apt.patientEmail === patientEmail).length;
+    return appointments.filter((apt: any) => apt.patientEmail === patientEmail).length;
   };
 
   const getPatientLatestAppointment = (patientEmail: string) => {
-    const patientAppointments = appointments.filter(apt => apt.patientEmail === patientEmail);
+    const patientAppointments = appointments.filter((apt: any) => apt.patientEmail === patientEmail);
     
     if (patientAppointments.length === 0) return null;
     
@@ -91,10 +84,7 @@ export default function PatientsPage() {
     )[0];
   };
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // filteredPatients is now provided by the PatientContext
 
   if (!canViewPatients) {
     return (
@@ -108,7 +98,7 @@ export default function PatientsPage() {
     );
   }
 
-  if (loading) {
+  if (patientsLoading || appointmentsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -124,10 +114,19 @@ export default function PatientsPage() {
           <p className="text-gray-600 mt-1">Manage patient information and appointment history</p>
         </div>
         
-        <Button onClick={fetchPatients} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => { refreshPatients(); fetchAppointments(); }} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          
+          {canAddWalkInPatients && (
+            <WalkInPatient 
+              staffEmail={user?.email || ''}
+              onSuccess={handleWalkInPatientSuccess}
+            />
+          )}
+        </div>
       </div>
 
       {/* Search */}

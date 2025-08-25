@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { AppointmentCard } from '../../../components/AppointmentCard';
 import { BookingForm } from '../../../components/BookingForm';
-import { WalkInPatient } from '../../../components/WalkInPatient';
 import { Calendar, Clock, Users, UserPlus, RefreshCw } from 'lucide-react';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
@@ -117,13 +116,6 @@ export default function AppointmentsPage() {
           
           {canBookForPatients && (
             <BookingForm onSuccess={fetchAppointments} asDialog={true} />
-          )}
-          
-          {(user?.role === 'admin' || user?.role === 'staff') && (
-            <WalkInPatient 
-              staffEmail={user?.email || ''}
-              onSuccess={fetchAppointments}
-            />
           )}
         </div>
       </div>

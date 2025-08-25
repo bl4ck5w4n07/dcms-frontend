@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { UserPlus, Calendar, Clock, User } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { usePatients } from '../contexts/PatientContext';
+import { useAppointments } from '../contexts/AppointmentContext';
+import { toast } from 'sonner';
 
 interface WalkInPatientProps {
   staffEmail: string;
@@ -28,6 +30,9 @@ const TIME_SLOTS = [
 ];
 
 export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
+  const { createWalkInPatient } = usePatients();
+  const { createAppointment } = useAppointments();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1); // 1: Patient info, 2: Appointment confirmation
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,35 +48,38 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
     confirmed: false
   });
 
+  // Set default date to today when dialog opens
+  useEffect(() => {
+    if (isOpen && step === 2 && !appointmentData.appointmentDate) {
+      const today = new Date().toISOString().split('T')[0];
+      setAppointmentData(prev => ({
+        ...prev,
+        appointmentDate: today
+      }));
+    }
+  }, [isOpen, step]);
+
+  // Get today's date for min date validation
+  const today = new Date().toISOString().split('T')[0];
+
   const handlePatientSubmit = async () => {
     if (!patientData.name || !patientData.email) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Create walk-in patient
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/walk-in-patient`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`
-        },
-        body: JSON.stringify({
-          ...patientData,
-          staffEmail
-        })
-      });
-
-      if (response.ok) {
+      const result = await createWalkInPatient(patientData);
+      
+      if (result.success) {
+        toast.success('Walk-in patient added successfully');
         setStep(2);
       } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        toast.error(result.error || 'Failed to add patient');
       }
     } catch (error) {
-      alert('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
       console.error('Walk-in patient error:', error);
     } finally {
       setIsSubmitting(false);
@@ -79,43 +87,34 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
   };
 
   const handleAppointmentConfirm = async () => {
+    if (!appointmentData.appointmentDate || !appointmentData.appointmentTime || !appointmentData.dentistName) {
+      toast.error('Please fill in all appointment details');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Create appointment for walk-in patient
-      const appointmentResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`
-        },
-        body: JSON.stringify({
-          patientName: patientData.name,
-          patientEmail: patientData.email,
-          patientPhone: patientData.phone,
-          reason: 'Walk-in appointment',
-          appointmentDate: appointmentData.appointmentDate,
-          appointmentTime: appointmentData.appointmentTime,
-          dentistName: appointmentData.dentistName,
-          status: 'pending', // Always default to pending
-          type: 'walk_in',
-          createdByStaff: staffEmail,
-          needsStaffConfirmation: true // Always needs confirmation
-        })
+      const result = await createAppointment({
+        patientName: patientData.name,
+        patientEmail: patientData.email,
+        patientPhone: patientData.phone,
+        reason: 'Walk-in appointment'
       });
 
-      if (appointmentResponse.ok) {
+      if (result.success && result.appointment) {
+        // Update the appointment with scheduling details - always remains pending
+        // Note: According to requirements, confirmed appointments should remain pending
+        toast.success('Walk-in appointment created successfully');
+        
         // Reset form
-        setPatientData({ name: '', email: '', phone: '' });
-        setAppointmentData({ appointmentDate: '', appointmentTime: '', dentistName: '', confirmed: false });
-        setStep(1);
+        resetForm();
         setIsOpen(false);
         onSuccess();
       } else {
-        const errorData = await appointmentResponse.json();
-        alert(`Error creating appointment: ${errorData.error}`);
+        toast.error(result.error || 'Failed to create appointment');
       }
     } catch (error) {
-      alert('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
       console.error('Walk-in appointment error:', error);
     } finally {
       setIsSubmitting(false);
@@ -234,6 +233,7 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
                 <Input
                   id="date"
                   type="date"
+                  min={today}
                   value={appointmentData.appointmentDate}
                   onChange={(e) => setAppointmentData(prev => ({
                     ...prev,
@@ -298,8 +298,8 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
                 </Label>
               </div>
 
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
-                If appointment is not confirmed, it will remain pending until the patient agrees to the scheduled time.
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                <strong>Note:</strong> All walk-in appointments remain in pending status until staff confirmation, regardless of the confirmation checkbox above.
               </div>
 
               <div className="flex gap-2">
