@@ -53,10 +53,25 @@ export default function PatientDetailPage() {
     dentistName: '',
     reason: 'Follow-up appointment'
   });
-  const [medicalData, setMedicalData] = useState({
-    allergies: [] as string[],
-    medications: [] as string[],
-    medicalConditions: [] as string[],
+  const [medicalData, setMedicalData] = useState<{
+    allergies: string[];
+    medications: string[];
+    medicalConditions: string[];
+    emergencyContact: {
+      name: string;
+      phone: string;
+      relationship: string;
+    };
+    insuranceInfo: {
+      provider: string;
+      policyNumber: string;
+      groupNumber?: string;
+    };
+    notes: string;
+  }>({
+    allergies: [],
+    medications: [],
+    medicalConditions: [],
     emergencyContact: {
       name: '',
       phone: '',
