@@ -13,27 +13,17 @@ import {
   Home,
   UserPlus,
   User,
-  Shield,
-  Lock
+  Shield
 } from 'lucide-react';
 
 interface NavigationProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
-  onChangePassword?: () => void;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActiveSection, onChangePassword }) => {
+export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActiveSection }) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
-
-  const handleChangePassword = () => {
-    if (onChangePassword) {
-      onChangePassword();
-    } else {
-      router.push('/change-password');
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -119,15 +109,6 @@ export const Navigation: React.FC<NavigationProps> = ({ activeSection, setActive
       </nav>
       
       <div className="p-4 border-t space-y-2">
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={handleChangePassword}
-        >
-          <Lock className="mr-3 h-4 w-4" />
-          Change Password
-        </Button>
-        
         <Button
           variant="outline"
           className="w-full justify-start"

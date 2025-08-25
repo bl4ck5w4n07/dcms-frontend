@@ -43,36 +43,28 @@ export default function PatientsPage() {
     if (!canViewPatients) return;
 
     try {
-      // For demo purposes, we'll extract patient data from appointment records
+      // Fetch all patients from KV store
+      const patientsResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/patients`, {
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`
+        }
+      });
+
+      // Fetch appointments for additional context
       const appointmentResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`, {
         headers: {
           'Authorization': `Bearer ${publicAnonKey}`
         }
       });
 
+      if (patientsResponse.ok) {
+        const patientsData = await patientsResponse.json();
+        setPatients(patientsData.patients || []);
+      }
+
       if (appointmentResponse.ok) {
         const appointmentData = await appointmentResponse.json();
         setAppointments(appointmentData.appointments || []);
-
-        // Extract unique patients from appointments
-        const uniquePatients = new Map();
-        (appointmentData.appointments || []).forEach((apt: any) => {
-          if (!uniquePatients.has(apt.patientEmail)) {
-            uniquePatients.set(apt.patientEmail, {
-              id: apt.patientEmail,
-              name: apt.patientName,
-              email: apt.patientEmail,
-              phone: apt.patientPhone,
-              role: 'patient',
-              canLogin: true,
-              isWalkIn: apt.type === 'walk_in',
-              createdAt: apt.createdAt,
-              createdBy: apt.createdByStaff
-            });
-          }
-        });
-
-        setPatients(Array.from(uniquePatients.values()));
       }
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -86,13 +78,11 @@ export default function PatientsPage() {
   }, [canViewPatients]);
 
   const getPatientAppointmentCount = (patientEmail: string) => {
-    return appointments.filter(apt => apt.id.includes(patientEmail)).length;
+    return appointments.filter(apt => apt.patientEmail === patientEmail).length;
   };
 
   const getPatientLatestAppointment = (patientEmail: string) => {
-    const patientAppointments = appointments.filter(apt => 
-      apt.id.includes(patientEmail) || appointments.some(a => a.id === apt.id)
-    );
+    const patientAppointments = appointments.filter(apt => apt.patientEmail === patientEmail);
     
     if (patientAppointments.length === 0) return null;
     
