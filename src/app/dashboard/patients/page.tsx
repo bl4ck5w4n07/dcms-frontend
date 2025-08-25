@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Badge } from '@/app/components/ui/badge';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import { User, Mail, Phone, Calendar, Search, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
 interface Patient {
   id: string;

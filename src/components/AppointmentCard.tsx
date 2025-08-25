@@ -10,7 +10,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Calendar, Clock, User, Phone, Mail, MessageSquare, Edit3 } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { format } from 'date-fns';
 
 interface Note {

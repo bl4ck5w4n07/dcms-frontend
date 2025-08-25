@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Badge } from '@/app/components/ui/badge';
-import { AppointmentCard } from '@/app/components/AppointmentCard';
-import { BookingForm } from '@/app/components/BookingForm';
-import { WalkInPatient } from '@/app/components/WalkInPatient';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Button } from '../../../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Badge } from '../../../components/ui/badge';
+import { AppointmentCard } from '../../../components/AppointmentCard';
+import { BookingForm } from '../../../components/BookingForm';
+import { WalkInPatient } from '../../../components/WalkInPatient';
 import { Calendar, Clock, Users, UserPlus, RefreshCw } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
 interface Appointment {
   id: string;

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Calendar, Plus } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { toast } from 'sonner';
 
 interface BookingFormProps {

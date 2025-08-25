@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { Badge } from '@/app/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { Badge } from '../../../components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog';
 import { User, Mail, Phone, Shield, Calendar, CheckCircle, AlertCircle, Eye, EyeOff, Lock, MapPin, Cake } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Address } from '@/app/types/index';
+import { Address } from '../../../types/index';
 
 export default function ProfilePage() {
   const { user, updateProfile, changePassword } = useAuth();

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
-import { User, Address } from '../types/index';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { User, Address } from '../app/types/index';
 
 interface AuthContextType {
   user: User | null;

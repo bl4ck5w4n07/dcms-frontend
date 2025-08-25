@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 //import { mockServices, mockUsers, timeSlots } from '../data/mockData';
-import { projectId, publicAnonKey } from '@/mock/supabase/info';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { format } from 'date-fns';
 import { CalendarIcon, CheckCircle } from 'lucide-react';
 import { cn } from './ui/utils';

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import { AuthProvider } from '@/app/contexts/AuthContext';
-import { Toaster } from '@/app/components/ui/sonner';
-import '@/app/components/ui/globals.css';
+import { AuthProvider } from '../contexts/AuthContext';
+import { PatientProvider } from '../contexts/PatientContext';
+import { AppointmentProvider } from '../contexts/AppointmentContext';
+import { Toaster } from '../components/ui/sonner';
+import '../styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Go-Goyagoy - Modern Dental Clinic Management',
@@ -17,10 +19,14 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            {children}
-            <Toaster />
-          </div>
+          <PatientProvider>
+            <AppointmentProvider>
+              <div className="min-h-screen bg-gray-50">
+                {children}
+                <Toaster />
+              </div>
+            </AppointmentProvider>
+          </PatientProvider>
         </AuthProvider>
       </body>
     </html>
