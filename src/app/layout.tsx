@@ -1,3 +1,4 @@
+import ProfilerWrapper from '../components/ProfilerWrapper';
 import type { Metadata } from 'next';
 import { AuthProvider } from '../contexts/AuthContext';
 import { PatientProvider } from '../contexts/PatientContext';
@@ -19,18 +20,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <AuthProvider>
-          <PatientProvider>
-            <AppointmentProvider>
-              <ServiceProvider>
-                <div className="min-h-screen bg-gray-50">
-                  {children}
-                  <Toaster />
-                </div>
-              </ServiceProvider>
-            </AppointmentProvider>
-          </PatientProvider>
-        </AuthProvider>
+        <ProfilerWrapper>
+          <AuthProvider>
+            <PatientProvider>
+              <AppointmentProvider>
+                <ServiceProvider>
+                  <div className="min-h-screen bg-gray-50">
+                    {children}
+                    <Toaster />
+                  </div>
+                </ServiceProvider>
+              </AppointmentProvider>
+            </PatientProvider>
+          </AuthProvider>
+        </ProfilerWrapper>
       </body>
     </html>
   );
