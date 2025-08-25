@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-//import { mockServices, mockUsers, timeSlots } from '../data/mockData';
+import { mockServices, mockUsers, timeSlots } from '@/data/mockData';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { format } from 'date-fns';
 import { CalendarIcon, CheckCircle } from 'lucide-react';
-import { cn } from './ui/utils';
+import { cn } from '@/components/ui/utils';
 
 interface HomeBookingFormProps {
   isOpen: boolean;
@@ -29,12 +29,16 @@ export const HomeBookingForm: React.FC<HomeBookingFormProps> = ({
     firstName: '',
     lastName: '',
     contact: '', // email or phone
-    contactType: 'email' as 'email' | 'phone'
+    contactType: 'email' as 'email' | 'phone',
+    service: '',
+    dentist: '',
+    date: undefined as Date | undefined,
+    time: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // const dentists = mockUsers.filter(u => u.role === 'dentist' || u.role === 'admin');
+  const dentists = mockUsers.filter(u => u.role === 'dentist' || u.role === 'admin');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +50,14 @@ export const HomeBookingForm: React.FC<HomeBookingFormProps> = ({
         patientName: `${formData.firstName} ${formData.lastName}`,
         patientEmail: formData.contactType === 'email' ? formData.contact : '',
         patientPhone: formData.contactType === 'phone' ? formData.contact : '',
+        reason: formData.service || 'General appointment',
+        message: `Preferred dentist: ${formData.dentist || 'Any available'}. Preferred date: ${formData.date ? format(formData.date, 'MMM dd, yyyy') : 'Flexible'}. Preferred time: ${formData.time || 'Flexible'}.`,
         needsStaffConfirmation: true,
         type: 'booking_request'
       };
 
       // Submit to Supabase
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-455ee360/appointments`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-c89a26e4/appointments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +81,11 @@ export const HomeBookingForm: React.FC<HomeBookingFormProps> = ({
           firstName: '',
           lastName: '',
           contact: '',
-          contactType: 'email'
+          contactType: 'email',
+          service: '',
+          dentist: '',
+          date: undefined,
+          time: ''
         });
         onSuccess();
       }, 2000);
@@ -168,11 +178,83 @@ export const HomeBookingForm: React.FC<HomeBookingFormProps> = ({
               </div>
             </div>
 
-            
+            <div className="space-y-2">
+              <Label htmlFor="service">Service Needed</Label>
+              <Select value={formData.service} onValueChange={(value) => setFormData(prev => ({ ...prev, service: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockServices.map((service) => (
+                    <SelectItem key={service.id} value={service.name}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            
+            <div className="space-y-2">
+              <Label htmlFor="dentist">Preferred Dentist</Label>
+              <Select value={formData.dentist} onValueChange={(value) => setFormData(prev => ({ ...prev, dentist: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any available" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any Available</SelectItem>
+                  {dentists.map((dentist) => (
+                    <SelectItem key={dentist.id} value={dentist.name}>
+                      {dentist.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preferred Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.date ? format(formData.date, "MMM dd") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, date }))}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Preferred Time</Label>
+                <Select value={formData.time} onValueChange={(value) => setFormData(prev => ({ ...prev, time: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <Button type="submit" className="w-full text-lg py-3" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Request Appointment'}

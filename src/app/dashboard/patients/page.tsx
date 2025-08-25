@@ -14,6 +14,7 @@ import { WalkInPatient } from '../../../components/WalkInPatient';
 import { User, Mail, Phone, Calendar, Search, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { Patient } from '../../../utils/api/patientApi';
 
 // Patient interface is now provided by PatientContext
 
@@ -81,7 +82,7 @@ export default function PatientsPage() {
     fetchAppointments();
   };
 
-  const handlePatientClick = (patient: any) => {
+  const handlePatientClick = (patient: Patient) => {
     router.push(`/dashboard/patients/${patient.id}`);
   };
 
@@ -216,7 +217,7 @@ export default function PatientsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPatients.map(patient => {
+                {filteredPatients.map((patient: Patient) => {
                   const latestAppointment = getPatientLatestAppointment(patient.email);
                   return (
                     <TableRow 
@@ -265,7 +266,7 @@ export default function PatientsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-3 w-3 text-gray-400" />
-                          {format(new Date(patient.createdAt), 'MMM dd, yyyy')}
+                          {patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'Unknown'}
                         </div>
                         {patient.createdBy && (
                           <div className="text-xs text-gray-500">by {patient.createdBy}</div>
@@ -275,7 +276,12 @@ export default function PatientsPage() {
                       <TableCell>
                         {latestAppointment ? (
                           <div className="text-sm">
-                            <div>{format(new Date(latestAppointment.createdAt), 'MMM dd, yyyy')}</div>
+                            <div>
+                              {latestAppointment.createdAt 
+                                ? format(new Date(latestAppointment.createdAt), 'MMM dd, yyyy')
+                                : 'Unknown date'
+                              }
+                            </div>
                             <Badge variant="outline" className="text-xs">
                               {latestAppointment.status}
                             </Badge>

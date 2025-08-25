@@ -3,6 +3,7 @@ import { User } from '../../types/index';
 
 export interface Patient extends User {
   role: 'patient';
+  createdBy?: string;
 }
 
 export interface CreateWalkInPatientData {

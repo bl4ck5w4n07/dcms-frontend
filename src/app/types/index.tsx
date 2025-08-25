@@ -17,6 +17,7 @@ export interface User {
   canLogin: boolean;
   isWalkIn?: boolean;
   createdAt?: string;
+  createdBy?: string;
 }
 
 export interface Appointment {
