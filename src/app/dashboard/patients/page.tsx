@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePatients } from '../../../contexts/PatientContext';
+import { useAppointments } from '../../../contexts/AppointmentContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -23,6 +25,7 @@ interface PatientAppointment {
 }
 
 export default function PatientsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { 
     patients, 
@@ -32,6 +35,7 @@ export default function PatientsPage() {
     filteredPatients,
     refreshPatients 
   } = usePatients();
+  const { refreshAppointments } = useAppointments();
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
 
@@ -67,7 +71,18 @@ export default function PatientsPage() {
 
   const handleWalkInPatientSuccess = () => {
     refreshPatients();
+    refreshAppointments();
     fetchAppointments();
+  };
+
+  const handleRefresh = () => {
+    refreshPatients();
+    refreshAppointments();
+    fetchAppointments();
+  };
+
+  const handlePatientClick = (patient: any) => {
+    router.push(`/dashboard/patients/${patient.id}`);
   };
 
   const getPatientAppointmentCount = (patientEmail: string) => {
@@ -115,7 +130,7 @@ export default function PatientsPage() {
         </div>
         
         <div className="flex gap-2">
-          <Button onClick={() => { refreshPatients(); fetchAppointments(); }} variant="outline" className="flex items-center gap-2">
+          <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
@@ -179,6 +194,7 @@ export default function PatientsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Patient List</CardTitle>
+          <p className="text-sm text-gray-600">Click on a patient to view details and manage appointments</p>
         </CardHeader>
         <CardContent>
           {filteredPatients.length === 0 ? (
@@ -203,7 +219,11 @@ export default function PatientsPage() {
                 {filteredPatients.map(patient => {
                   const latestAppointment = getPatientLatestAppointment(patient.email);
                   return (
-                    <TableRow key={patient.id}>
+                    <TableRow 
+                      key={patient.id}
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => handlePatientClick(patient)}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <User className="h-8 w-8 bg-gray-100 rounded-full p-2 text-gray-600" />
@@ -276,9 +296,9 @@ export default function PatientsPage() {
       <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <h3 className="font-medium text-gray-900 mb-2">Patient Management Notes</h3>
         <ul className="text-sm text-gray-600 space-y-1">
+          <li>• Click on any patient to view details and manage appointments</li>
+          <li>• Walk-in patients without scheduled appointments can be scheduled directly</li>
           <li>• Walk-in patients are recorded but cannot login until they register themselves</li>
-          <li>• Patient data is extracted from appointment records for this demo</li>
-          <li>• Full patient management features would include detailed medical records</li>
           <li>• Staff can view all patient information for appointment scheduling</li>
         </ul>
       </div>

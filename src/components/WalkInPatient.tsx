@@ -31,11 +31,12 @@ const TIME_SLOTS = [
 
 export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
   const { createWalkInPatient } = usePatients();
-  const { createAppointment } = useAppointments();
+  const { createAppointment, updateAppointment } = useAppointments();
   
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState(1); // 1: Patient info, 2: Appointment confirmation
+  const [step, setStep] = useState(1); // 1: Patient info, 2: Appointment scheduling
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
   const [patientData, setPatientData] = useState({
     name: '',
     email: '',
@@ -70,13 +71,27 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
 
     setIsSubmitting(true);
     try {
-      const result = await createWalkInPatient(patientData);
+      // First create the walk-in patient
+      const patientResult = await createWalkInPatient(patientData);
       
-      if (result.success) {
-        toast.success('Walk-in patient added successfully');
-        setStep(2);
+      if (patientResult.success) {
+        // Then create a basic appointment
+        const appointmentResult = await createAppointment({
+          patientName: patientData.name,
+          patientEmail: patientData.email,
+          patientPhone: patientData.phone,
+          reason: 'Walk-in appointment'
+        });
+
+        if (appointmentResult.success && appointmentResult.appointment) {
+          setCreatedAppointmentId(appointmentResult.appointment.id);
+          toast.success('Walk-in patient added successfully');
+          setStep(2);
+        } else {
+          toast.error(appointmentResult.error || 'Failed to create appointment');
+        }
       } else {
-        toast.error(result.error || 'Failed to add patient');
+        toast.error(patientResult.error || 'Failed to add patient');
       }
     } catch (error) {
       toast.error('Network error. Please try again.');
@@ -92,30 +107,34 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
       return;
     }
 
+    if (!createdAppointmentId) {
+      toast.error('No appointment found to update');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const result = await createAppointment({
-        patientName: patientData.name,
-        patientEmail: patientData.email,
-        patientPhone: patientData.phone,
-        reason: 'Walk-in appointment'
+      // Update the appointment with scheduling details
+      const result = await updateAppointment(createdAppointmentId, {
+        date: appointmentData.appointmentDate,
+        time: appointmentData.appointmentTime,
+        dentistName: appointmentData.dentistName,
+        status: 'pending' // Keep as pending according to requirements
       });
 
-      if (result.success && result.appointment) {
-        // Update the appointment with scheduling details - always remains pending
-        // Note: According to requirements, confirmed appointments should remain pending
-        toast.success('Walk-in appointment created successfully');
+      if (result.success) {
+        toast.success('Walk-in appointment scheduled successfully');
         
         // Reset form
         resetForm();
         setIsOpen(false);
         onSuccess();
       } else {
-        toast.error(result.error || 'Failed to create appointment');
+        toast.error(result.error || 'Failed to schedule appointment');
       }
     } catch (error) {
       toast.error('Network error. Please try again.');
-      console.error('Walk-in appointment error:', error);
+      console.error('Walk-in appointment scheduling error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -124,6 +143,7 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
   const resetForm = () => {
     setPatientData({ name: '', email: '', phone: '' });
     setAppointmentData({ appointmentDate: '', appointmentTime: '', dentistName: '', confirmed: false });
+    setCreatedAppointmentId(null);
     setStep(1);
   };
 
@@ -308,7 +328,7 @@ export function WalkInPatient({ staffEmail, onSuccess }: WalkInPatientProps) {
                   disabled={isSubmitting}
                   className="flex-1"
                 >
-                  {isSubmitting ? 'Creating Appointment...' : 'Create Appointment'}
+                  {isSubmitting ? 'Scheduling Appointment...' : 'Schedule Appointment'}
                 </Button>
                 <Button 
                   variant="outline" 
